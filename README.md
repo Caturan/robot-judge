@@ -2,6 +2,8 @@
 
 **An AI judge that watches two real robot runs and tells you which one did the task better, and why.** It is built on Meta's Muse models and checked against 6,070 human votes on a robot task it never saw.
 
+**[Watch the 3-minute demo video](https://www.loom.com/share/cd6e97a0aca344d0afbce0f3d25c90f4)**
+
 Checking whether a robot policy improved still means people watching its runs. That is slow, expensive and doesn't scale. Robot Judge turns each run into a storyboard, asks a Muse model to compare the two runs, and returns a verdict, a confidence and a one-sentence reason. We measure it the way you would measure a new human annotator: how often it agrees with the crowd.
 
 ## Results

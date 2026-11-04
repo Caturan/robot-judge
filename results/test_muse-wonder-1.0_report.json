@@ -1,32 +1,32 @@
 {
   "model": "muse-wonder-1.0",
   "failed_pairs": 0,
-  "order_consistency": 0.9259259259259259,
+  "order_consistency": 0.9251700680272109,
   "judge": {
-    "n_pairs": 30,
-    "majority_accuracy": 0.8888888888888888,
-    "majority_accuracy_strong(>=8)": 0.9411764705882353,
-    "abstain_rate": 0.0,
-    "vote_agreement": 0.6756999999999999,
-    "log_loss": 0.5531550251886334,
-    "pearson_r": 0.8645238135514537
+    "n_pairs": 150,
+    "majority_accuracy": 0.8496503496503497,
+    "majority_accuracy_strong(>=8)": 0.9269662921348315,
+    "abstain_rate": 0.02097902097902098,
+    "vote_agreement": 0.6735466666666666,
+    "log_loss": 0.586605549133259,
+    "pearson_r": 0.804009066271087
   },
   "human_ceiling": {
-    "human_vs_majority_of_other9": 0.7166666666666667,
-    "human_vote_agreement": 0.6577777777777777
+    "human_vs_majority_of_other9": 0.7613333333333333,
+    "human_vote_agreement": 0.6697777777777778
   },
   "elo_human": {
-    "cosmos": 1098.7,
-    "pi05": 1066.3,
-    "molmoact": 1059.2,
-    "openvla": 1015.8,
-    "xvla": 760.0
+    "cosmos": 1059.8,
+    "pi05": 1052.5,
+    "molmoact": 1024.8,
+    "openvla": 1022.4,
+    "xvla": 840.4
   },
   "elo_judge": {
-    "pi05": 1066.8,
-    "cosmos": 1063.7,
-    "openvla": 1053.9,
-    "molmoact": 1047.8,
-    "xvla": 767.8
+    "cosmos": 1058.5,
+    "pi05": 1050.5,
+    "molmoact": 1032.2,
+    "openvla": 1017.0,
+    "xvla": 841.9
   }
 }

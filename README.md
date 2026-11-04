@@ -9,10 +9,39 @@ Checking whether a robot policy improved still means people watching its runs. T
 Test set: the held-out `cup_stacking` task from [robot-policy-human-preferences-55k](https://huggingface.co/datasets/datapointai/robot-policy-human-preferences-55k). It has 607 pairs of real bimanual robot runs, 5 VLA policies, and exactly **10 human votes per pair**. No prompt or design decision was tuned on this task.
 
 <!-- RESULTS -->
-_Final numbers are filled in by `src/evaluate.py` once the full run completes._
+**All test pairs**
+
+| | Pairs | Agrees with human majority (95% CI) | Clear-cut pairs (≥8–2) | Pearson r vs vote share | Order consistency |
+|---|---:|---|---:|---:|---:|
+| Muse Spark 1.3 | 607 | **82.6%** (79.2%–85.6%) | 87.9% | 0.75 | 87.6% |
+| Single human vs. other 9 (ceiling) | 607 | 77.4% (75.7%–79.1%) | – | – | – |
+
+**Head-to-head on the same 150 pairs**
+
+| | Pairs | Agrees with human majority (95% CI) | Clear-cut pairs (≥8–2) | Pearson r vs vote share | Order consistency |
+|---|---:|---|---:|---:|---:|
+| Muse Spark 1.3 | 150 | **81.8%** (75.4%–88.2%) | 89.9% | 0.73 | 87.8% |
+| Muse Wonder 1.0 | 150 | **85.0%** (78.7%–90.7%) | 92.7% | 0.80 | 92.5% |
+| Single human vs. other 9 (ceiling) | 150 | 76.1% (72.6%–79.3%) | – | – | – |
+
+**Model ranking on `cup_stacking`** (Bradley-Terry Elo from human votes vs. from the judge's verdicts)
+
+| Rank | Humans | Elo | Muse Spark judge | Elo |
+|---:|---|---:|---|---:|
+| 1 | π0.5-DROID | 1058 | MolmoAct 2 | 1048 |
+| 2 | OpenVLA-OFT | 1051 | OpenVLA-OFT | 1044 |
+| 3 | Cosmos Policy | 1039 | Cosmos Policy | 1043 |
+| 4 | MolmoAct 2 | 1033 | π0.5-DROID | 1030 |
+| 5 | X-VLA | 820 | X-VLA | 836 |
+
+Judge Elo is within **14 points** of human Elo on average (max 28). Both put X-VLA clearly last (~213 Elo below the rest). The other four sit within 25 Elo of each other even on human votes, so their order is within noise for humans and judge alike.
+
+Muse Spark agreement by layout: in-distribution: 83.4% (420 pairs); out-of-distribution: 80.6% (187 pairs).
 <!-- /RESULTS -->
 
 **How to read this.** *Agreement with the majority* is the share of non-tied pairs where the judge picks the side most of the 10 humans picked. The **human ceiling** applies the same test to each annotator: how often does one person agree with the majority of the other 9? A judge above that line agrees with the crowd more reliably than a typical single human rater does.
+
+Two caveats. First, the judge is scored against the majority of all 10 votes, while each human is scored against the other 9, so the reference for the judge is slightly less noisy. Second, the top four policies on this task are within about 20 Elo of each other on human votes alone, so swaps among them are within noise. The clear gap is between X-VLA and everyone else.
 
 ## How it works
 

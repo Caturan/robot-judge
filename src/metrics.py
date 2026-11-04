@@ -25,15 +25,15 @@ def human_ceiling(pairs: pd.DataFrame, responses: pd.DataFrame) -> dict:
 def judge_scores(pairs: pd.DataFrame, p_a: pd.Series) -> dict:
     df = pairs.assign(p_a=p_a.reindex(pairs.pair_key).values).dropna(subset=["p_a"])
     decisive = df[df.votes_a != 5]
-    pred_a = decisive.p_a > 0.5
+    # p_a == 0.5 (the two orders cancel out) earns half credit
+    correct = np.where(decisive.p_a == 0.5, 0.5, (decisive.p_a > 0.5) == (decisive.votes_a > 5))
+    strong = ((decisive.votes_a >= 8) | (decisive.votes_a <= 2)).values
     hard = (decisive.p_a == 0.5).mean()
     p = df.p_a.clip(1e-3, 1 - 1e-3)
     return {
         "n_pairs": len(df),
-        "majority_accuracy": float((pred_a == (decisive.votes_a > 5)).mean()),
-        "majority_accuracy_strong(>=8)": float(
-            (pred_a == (decisive.votes_a > 5))[(decisive.votes_a >= 8) | (decisive.votes_a <= 2)].mean()
-        ),
+        "majority_accuracy": float(correct.mean()),
+        "majority_accuracy_strong(>=8)": float(correct[strong].mean()),
         "abstain_rate": float(hard),
         "vote_agreement": float((df.p_a * df.label_a + (1 - df.p_a) * (1 - df.label_a)).mean()),
         "log_loss": float(-(df.label_a * np.log(p) + (1 - df.label_a) * np.log(1 - p)).mean()),

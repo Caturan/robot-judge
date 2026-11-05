@@ -39,6 +39,42 @@ Test set: the held-out `cup_stacking` task from [robot-policy-human-preferences-
 Judge Elo is within **14 points** of human Elo on average (max 28). Both put X-VLA clearly last (~213 Elo below the rest). The other four sit within 25 Elo of each other even on human votes, so their order is within noise for humans and judge alike.
 
 Muse Spark agreement by layout: in-distribution: 83.4% (420 pairs); out-of-distribution: 80.6% (187 pairs).
+
+**Every task.** Muse Spark on a random sample of pairs from the 7 training tasks (these tasks were never used to tune the prompt either).
+
+| Task | Pairs | Judge agrees with majority | Single human vs. other 9 |
+|---|---:|---:|---:|
+| `candy_sorting` | 53 | 93.3% | 67.7% |
+| `cup_storing` | 46 | 87.5% | 77.4% |
+| `pegboard` | 58 | 69.4% | 68.8% |
+| `pipette` | 58 | 76.9% | 72.1% |
+| `popcorn_microwave` | 43 | 81.1% | 64.7% |
+| `test_tubes` | 42 | 70.3% | 68.1% |
+| `toy_storing` | 49 | 87.8% | 69.6% |
+| `cup_stacking (test)` | 607 | 82.6% | 77.4% |
+| **All 8 tasks** | 956 | **81.9%** | 74.6% |
+
+**Calibrated with training votes.** We fit `p = sigmoid(0.45·logit(p_judge) +0.01)` to the human vote shares of the 349 training pairs, then applied it unchanged to the test task. Test log-loss goes from 0.610 to **0.563**, and agreement with the majority stays at 82.2%. The confidence now reads like a vote share:
+
+| Judge confidence (calibrated) | Pairs | Share of humans who agreed with the judge |
+|---|---:|---:|
+| 50–60% | 119 | 50.3% |
+| 60–70% | 162 | 63.3% |
+| 70–80% | 264 | 81.9% |
+| 80–100% | 62 | 86.9% |
+
+**A trained judge on the 49k training votes.** Frozen V-JEPA 2 (ViT-L) features for each clip (16 frames), and a linear Bradley-Terry scorer trained on the vote shares of all 4,887 training pairs. Settings were chosen by leave-one-task-out CV on the 7 training tasks (best: `mean` features, C=0.001, LOTO accuracy 75.5%); the test task was scored once.
+
+| Judge | All 607 test pairs | Without X-VLA | Pairs where the policy prior is wrong | Cost / speed per pair |
+|---|---:|---:|---:|---|
+| Policy identity only (no video) | 65.6% | 46.0% | 0% | – |
+| V-JEPA 2 + linear head (trained) | **81.3%** | 73.9% | 68.3% | free, ~1 s on a laptop |
+| Muse Spark 1.3 (zero-shot) | **82.6%** | 77.8% | 73.9% | ~$0.07, ~40 s |
+| Single human vs. other 9 | 77.4% | – | – | – |
+
+The *policy identity* row predicts every pair from each policy's training-task Elo without watching anything. Both judges beat it by a wide margin, and stay well above chance on the 199 pairs where the usually-weaker policy actually won. So they are judging the run, not recognising the robot.
+
+Muse stays ahead overall. On the 7 training tasks, V-JEPA averages 75.5% (each task scored by a model trained on the other six), against 80.9% for Muse on its sample, so the small gap on the test task partly reflects that `cup_stacking` suits V-JEPA. The trained judge is the cheap first-pass filter, and Muse is the accurate judge that explains itself.
 <!-- /RESULTS -->
 
 **How to read this.** *Agreement with the majority* is the share of non-tied pairs where the judge picks the side most of the 10 humans picked. The **human ceiling** applies the same test to each annotator: how often does one person agree with the majority of the other 9? A judge above that line agrees with the crowd more reliably than a typical single human rater does.
@@ -67,10 +103,18 @@ run B.mp4 ─┘   (one tiled image per run)     └─ reason + per-run summary
 ```bash
 python3 -m venv .venv && .venv/bin/pip install -r requirements.txt
 echo "META_API_KEY=..." > .env                    # Meta Model API key
-scripts/download.sh                               # needs HF access to the gated dataset
+scripts/download.sh --train-videos                # needs HF access to the gated dataset
 .venv/bin/python scripts/extract_clips.py         # parquet -> data/clips/*.mp4
 .venv/bin/python src/evaluate.py --model muse-spark-1.3 --workers 12
 .venv/bin/python src/evaluate.py --model muse-wonder-1.0 --limit 150 --max-tokens 16000
+.venv/bin/python src/evaluate.py --split train --model muse-spark-1.3 --limit 350   # per-task + calibration
+
+# trained judge (Python 3.10+; torch + transformers)
+python3.11 -m venv .venv-vjepa && .venv-vjepa/bin/pip install -r requirements-vjepa.txt
+.venv-vjepa/bin/python src/vjepa_features.py      # ~20 min on an M-series Mac
+.venv-vjepa/bin/python src/train_vjepa.py
+
+.venv/bin/python src/compare.py                   # rebuilds the results tables in this README
 .venv/bin/python app.py                           # demo UI at http://127.0.0.1:7860
 ```
 
@@ -79,14 +123,17 @@ scripts/download.sh                               # needs HF access to the gated
 | [`src/judge.py`](src/judge.py) | Storyboard rendering, the prompt, both-orders judging, resumable parallel runner |
 | [`src/metrics.py`](src/metrics.py) | Human ceiling, agreement / log-loss / correlation, Bradley-Terry Elo |
 | [`src/evaluate.py`](src/evaluate.py) | Runs a model on a split and writes `results/*_report.json` |
+| [`src/compare.py`](src/compare.py) | Builds every results table in this README from the raw verdicts |
+| [`src/vjepa_features.py`](src/vjepa_features.py) | Encodes every clip with frozen V-JEPA 2 (runs on Apple-silicon GPU) |
+| [`src/train_vjepa.py`](src/train_vjepa.py) | Trains the Bradley-Terry head on the training votes, with leave-one-task-out model selection |
 | [`app.py`](app.py) | Gradio demo: pick a pair, see the verdict and reason, then reveal the human vote |
 | [`results/`](results/) | Raw verdicts (JSONL) and reports for every run |
 
 ## Next steps
 
-- **A trained judge.** Encode clips with Meta's V-JEPA 2 video encoder and train a Bradley-Terry head on the 48,870 training votes from the other 7 tasks. The Muse judge would stay as the explainer.
+- **A stronger trained judge.** Fine-tune V-JEPA 2 end to end, or use an attentive probe over all patch tokens instead of a linear head on pooled features.
+- **Cascade.** Let V-JEPA settle the clear-cut pairs for free and send only the uncertain ones to Muse.
 - **Use the full video.** Add left and right wrist cameras and pass more frames for long tasks.
-- **Calibration.** Fit the confidence to the human vote share so "80% sure" means 8 out of 10 people.
 - **Closed loop.** Use the judge as a cheap reward signal to rank policy checkpoints during training.
 
 ## Credits

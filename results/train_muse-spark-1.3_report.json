@@ -1,0 +1,32 @@
+{
+  "model": "muse-spark-1.3",
+  "failed_pairs": 1,
+  "order_consistency": 0.791907514450867,
+  "judge": {
+    "n_pairs": 349,
+    "majority_accuracy": 0.8069620253164557,
+    "majority_accuracy_strong(>=8)": 0.8430232558139535,
+    "abstain_rate": 0.03164556962025317,
+    "vote_agreement": 0.6251833810888253,
+    "log_loss": 0.6912695837959145,
+    "pearson_r": 0.6759366941016051
+  },
+  "human_ceiling": {
+    "human_vs_majority_of_other9": 0.6982808022922636,
+    "human_vote_agreement": 0.6215218083412927
+  },
+  "elo_human": {
+    "molmoact": 1089.2,
+    "openvla": 1044.7,
+    "pi05": 1025.9,
+    "cosmos": 944.2,
+    "xvla": 896.1
+  },
+  "elo_judge": {
+    "molmoact": 1091.7,
+    "pi05": 1054.4,
+    "openvla": 1033.3,
+    "cosmos": 925.4,
+    "xvla": 895.2
+  }
+}
